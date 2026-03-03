@@ -1,6 +1,6 @@
 {
   "name": "orange-dragonfly",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "OD.js - REST-oriented TypeScript framework",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -35,7 +35,8 @@
     "example": "npx tsx example/index.ts",
     "example:cli": "npx tsx example/cli.ts",
     "eslint": "eslint ./src",
-    "eslint:fix": "eslint --fix ./src"
+    "eslint:fix": "eslint --fix ./src",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "framework",
