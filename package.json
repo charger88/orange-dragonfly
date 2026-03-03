@@ -1,0 +1,71 @@
+{
+  "name": "orange-dragonfly",
+  "version": "0.0.1",
+  "description": "OD.js - REST-oriented TypeScript framework",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/charger88/orange-dragonfly-web-server.git"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "jest",
+    "test:coverage": "npx jest --coverage",
+    "example": "npx tsx example/index.ts",
+    "example:cli": "npx tsx example/cli.ts",
+    "eslint": "eslint ./src",
+    "eslint:fix": "eslint --fix ./src"
+  },
+  "keywords": [
+    "framework",
+    "web server",
+    "rest",
+    "api"
+  ],
+  "author": {
+    "name": "Mike Kelner",
+    "email": "mikhail.kelner@gmail.com",
+    "url": "https://www.odjs.org/"
+  },
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/charger88/orange-dragonfly-web-server/issues"
+  },
+  "homepage": "https://github.com/charger88/orange-dragonfly-web-server#readme",
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/jest": "^30.0.0",
+    "eslint": "^10.0.1",
+    "globals": "^17.3.0",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.6",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.54.0"
+  },
+  "dependencies": {
+    "orange-dragonfly-router": "^1.0.1",
+    "orange-dragonfly-validator": "^1.0.1"
+  }
+}
