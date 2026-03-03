@@ -4,7 +4,7 @@ import PresidentsService from '../services/presidents'
 
 const service = new PresidentsService()
 
-const GET_QUERY_VALIDATOR = createValidator({ offset: { type: 'integer', min: 1 }, limit: { type: 'integer', min: 1, max: 500 } })
+const GET_QUERY_VALIDATOR = createValidator({ offset: { type: 'integer', min: 0 }, limit: { type: 'integer', min: 1, max: 500 } })
 const POST_BODY_VALIDATOR = createValidator({ name: { type: 'string', required: true } })
 
 export default class UsersController extends ODController {
