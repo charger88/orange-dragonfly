@@ -1,5 +1,5 @@
 import { createHmac, createPublicKey, createSecretKey, createVerify, timingSafeEqual } from 'node:crypto'
-import type { KeyObject } from 'node:crypto'
+import type { KeyObject, JsonWebKey } from 'node:crypto'
 
 export type ODJWTAlgorithm =
   | 'HS256' | 'HS384' | 'HS512'
