@@ -12,7 +12,8 @@
     "forceConsistentCasingInFileNames": true,
     "outDir": "./dist",
     "rootDir": "./src",
-    "isolatedModules": true
+    "isolatedModules": true,
+    "types": ["node"]
   },
   "include": ["src/**/*.ts", "src/providers/env-config-provider.ts"],
   "exclude": ["node_modules", "dist", "tests"]

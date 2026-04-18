@@ -1,6 +1,6 @@
 {
   "name": "orange-dragonfly",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "OD.js - REST-oriented TypeScript framework",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -26,7 +26,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/charger88/orange-dragonfly-web-server.git"
+    "url": "git+https://github.com/charger88/orange-dragonfly.git"
   },
   "scripts": {
     "build": "tsup",
@@ -51,12 +51,13 @@
   },
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/charger88/orange-dragonfly-web-server/issues"
+    "url": "https://github.com/charger88/orange-dragonfly/issues"
   },
-  "homepage": "https://github.com/charger88/orange-dragonfly-web-server#readme",
+  "homepage": "https://github.com/charger88/orange-dragonfly#readme",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/jest": "^30.0.0",
+    "@types/node": "^18.19.130",
     "eslint": "^10.0.1",
     "globals": "^17.3.0",
     "jest": "^30.2.0",
@@ -66,7 +67,7 @@
     "typescript-eslint": "^8.54.0"
   },
   "dependencies": {
-    "orange-dragonfly-router": "^1.0.1",
-    "orange-dragonfly-validator": "^1.0.1"
+    "orange-dragonfly-router": "^1.0.2",
+    "orange-dragonfly-validator": "^1.0.2"
   }
 }
