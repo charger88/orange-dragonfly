@@ -80,11 +80,14 @@ request.getQueryParam('limit')           // unknown (null if missing)
 request.getQueryParam('limit', 100)      // returns 100 if missing
 ```
 
-Both URL query strings and URL-encoded bodies are parsed using the app's configured query parser (`ODAppOptions.queryParser`). The query parser can coerce specific parameter names to integers automatically:
+Both URL query strings and URL-encoded bodies are parsed using the app's configured query parser (`ODAppOptions.queryParser`). The query parser can coerce specific parameter names to integers or booleans automatically, and `*` works as a simple wildcard:
 
 ```ts
 ODApp.create({
-  queryParser: { integerParameters: ['offset', 'limit', 'page'] }
+  queryParser: {
+    integerParameters: ['offset', 'limit', 'page', '*_id'],
+    booleanParameters: ['active', 'is_*'],
+  }
 })
 ```
 

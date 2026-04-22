@@ -1,12 +1,21 @@
 import { isDangerousKey } from './sanitize-input'
 
 export interface MagicQueryParserOptions {
+  /**
+   * Parameter names that should be coerced to integers. Entries may be exact
+   * names (`id`) or `*` wildcard patterns (`*_id`).
+   */
   integerParameters?: string[]
+  /**
+   * Parameter names that should be coerced to booleans. Entries may be exact
+   * names (`active`) or `*` wildcard patterns (`is_*`).
+   */
   booleanParameters?: string[]
   trueValues?: string[]
 }
 
 type QueryValue = string | number | boolean | null
+type ParameterMatchRules = { exact: Set<string>, patterns: RegExp[] }
 
 const DEFAULT_TRUE_VALUES = ['1', 'true', 'TRUE', 'True']
 const FROM_ARRAY = Symbol('qs_fromArray')
@@ -23,8 +32,8 @@ type QueryContainer = QueryNode | QueryArray
  */
 export default class MagicQueryParser {
 
-  private _integerParameters: Set<string>
-  private _booleanParameters: Set<string>
+  private _integerParameters: ParameterMatchRules
+  private _booleanParameters: ParameterMatchRules
   private _trueValues: Set<string>
 
   /**
@@ -33,9 +42,52 @@ export default class MagicQueryParser {
    * @param options Optional configuration values.
    */
   constructor(options: MagicQueryParserOptions = {}) {
-    this._integerParameters = new Set(options.integerParameters ?? [])
-    this._booleanParameters = new Set(options.booleanParameters ?? [])
+    this._integerParameters = this._buildParameterMatchRules(options.integerParameters ?? [])
+    this._booleanParameters = this._buildParameterMatchRules(options.booleanParameters ?? [])
     this._trueValues = new Set(options.trueValues ?? DEFAULT_TRUE_VALUES)
+  }
+
+  /**
+   * Prepares exact-name and wildcard match rules for coercion lookups.
+   *
+   * @param parameters Configured parameter names or patterns.
+   * @returns Parsed matching rules.
+   */
+  private _buildParameterMatchRules(parameters: string[]): ParameterMatchRules {
+    const exact = new Set<string>()
+    const patterns: RegExp[] = []
+
+    for (const parameter of parameters) {
+      if (parameter.includes('*')) {
+        patterns.push(this._parameterPatternToRegex(parameter))
+      } else {
+        exact.add(parameter)
+      }
+    }
+
+    return { exact, patterns }
+  }
+
+  /**
+   * Converts a `*` wildcard parameter pattern into a regular expression.
+   *
+   * @param pattern Pattern to convert.
+   * @returns Compiled regular expression.
+   */
+  private _parameterPatternToRegex(pattern: string): RegExp {
+    const escaped = pattern.replace(/[|\\{}()[\]^$+?.]/g, '\\$&')
+    return new RegExp(`^${escaped.replace(/\*/g, '.*')}$`)
+  }
+
+  /**
+   * Checks whether a key matches the configured exact names or wildcard patterns.
+   *
+   * @param key Key to test.
+   * @param rules Matching rules.
+   * @returns True when the key matches.
+   */
+  private _matchesParameter(key: string, rules: ParameterMatchRules): boolean {
+    return rules.exact.has(key) || rules.patterns.some(pattern => pattern.test(key))
   }
 
   /**
@@ -59,17 +111,17 @@ export default class MagicQueryParser {
    */
   private _coerce(v: string | null, key: string, fallbackKey?: string): QueryValue {
     if (v === null) return null
-    if (this._booleanParameters.has(key)) {
+    if (this._matchesParameter(key, this._booleanParameters)) {
       return this._trueValues.has(v)
     }
-    if (this._integerParameters.has(key) && /^-?\d+$/.test(v)) {
+    if (this._matchesParameter(key, this._integerParameters) && /^-?\d+$/.test(v)) {
       return parseInt(v, 10)
     }
     if (fallbackKey != null && fallbackKey !== key) {
-      if (this._booleanParameters.has(fallbackKey)) {
+      if (this._matchesParameter(fallbackKey, this._booleanParameters)) {
         return this._trueValues.has(v)
       }
-      if (this._integerParameters.has(fallbackKey) && /^-?\d+$/.test(v)) {
+      if (this._matchesParameter(fallbackKey, this._integerParameters) && /^-?\d+$/.test(v)) {
         return parseInt(v, 10)
       }
     }

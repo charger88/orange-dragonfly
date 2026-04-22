@@ -151,6 +151,56 @@ describe('booleanParameters', () => {
   })
 })
 
+describe('parameter wildcard patterns', () => {
+  test('integer wildcard patterns match suffix-style keys', () => {
+    const parser = new MagicQueryParser({ integerParameters: ['*_id'] })
+
+    expect(parser.parse('user_id=42&team_id=-7&name=Alice')).toEqual({
+      user_id: 42,
+      team_id: -7,
+      name: 'Alice',
+    })
+  })
+
+  test('boolean wildcard patterns match prefix-style keys', () => {
+    const parser = new MagicQueryParser({ booleanParameters: ['is_*'] })
+
+    expect(parser.parse('is_active=1&is_admin=false&this_is_cool=false&active=true')).toEqual({
+      is_active: true,
+      is_admin: false,
+      this_is_cool: 'false',
+      active: 'true',
+    })
+  })
+
+  test('wildcard patterns apply to nested leaf keys', () => {
+    const parser = new MagicQueryParser({
+      integerParameters: ['*_id'],
+      booleanParameters: ['is_*'],
+    })
+
+    expect(parser.parse('filters[user_id]=7&filters[is_active]=true&filters[name]=Bob')).toEqual({
+      filters: {
+        user_id: 7,
+        is_active: true,
+        name: 'Bob',
+      },
+    })
+  })
+
+  test('wildcard patterns still apply through numeric child keys', () => {
+    const parser = new MagicQueryParser({
+      integerParameters: ['*_ids'],
+      booleanParameters: ['is_*'],
+    })
+
+    expect(parser.parse('user_ids[0]=5&user_ids[1]=6&is_flags[0]=1&is_flags[1]=0')).toEqual({
+      user_ids: { 0: 5, 1: 6 },
+      is_flags: { 0: true, 1: false },
+    })
+  })
+})
+
 describe('custom trueValues', () => {
   const parser = new MagicQueryParser({
     booleanParameters: ['flag'],

@@ -20,12 +20,14 @@ Coerces named parameters to specific types. Applies to both URL query strings an
 ```ts
 ODApp.create({
   queryParser: {
-    integerParameters: ['offset', 'limit', 'page'],
-    booleanParameters: ['active', 'verified'],
+    integerParameters: ['offset', 'limit', 'page', '*_id'],
+    booleanParameters: ['active', 'verified', 'is_*'],
     trueValues: ['1', 'true', 'TRUE', 'True'],  // values that coerce to true (default shown)
   }
 })
 ```
+
+`integerParameters` and `booleanParameters` accept exact names and simple `*` wildcard patterns. For example, `*_id` matches `user_id` or `company_id`, and `is_*` matches `is_active` or `is_admin`.
 
 The parser also supports nested structures using bracket notation:
 
@@ -33,6 +35,7 @@ The parser also supports nested structures using bracket notation:
 ?user[name]=Alice&user[age]=30   -> { user: { name: 'Alice', age: '30' } }
 ?tags[]=a&tags[]=b               -> { tags: ['a', 'b'] }
 ?items[0]=a&items[1]=b           -> { items: { 0: 'a', 1: 'b' } }
+?user_id=10&is_admin=true        -> { user_id: 10, is_admin: true }
 ```
 
 Only empty brackets (`[]`) create arrays. Numeric bracket segments such as `[0]` and `[1]` are treated as object keys.
