@@ -27,6 +27,7 @@ export interface ODAwsHttpApiEvent {
       protocol?: string | null
       sourceIp?: string | null
     } | null
+    authorizer?: Record<string, unknown> | null
   } | null
 }
 
@@ -43,6 +44,7 @@ export interface ODAwsHttpApiHandlerFactoryOptions {
   maxBodySize?: ODAwsLambdaHandlerFactoryOptions['maxBodySize']
   maxResponseSize?: ODAwsLambdaHandlerFactoryOptions['maxResponseSize']
   errorHandler?: ODAwsLambdaHandlerFactoryOptions['errorHandler']
+  getInitialState?: (event: ODAwsHttpApiEvent) => Map<string, unknown> | undefined
 }
 
 export type ODAwsHttpApiHandler = (event: ODAwsHttpApiEvent) => Promise<ODAwsHttpApiHandlerResponse>
@@ -65,6 +67,7 @@ export default class ODAwsHttpApiHandlerFactory {
       options,
       (requestApp, event, rawBody) => ODAwsHttpApiHandlerFactory.convertRequest(requestApp, event, rawBody),
       (response) => ODAwsHttpApiHandlerFactory.convertResponse(response, options.maxResponseSize),
+      options.getInitialState,
     )
   }
 

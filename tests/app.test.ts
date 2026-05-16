@@ -727,3 +727,42 @@ test('queryParser from app options is applied to requests', async () => {
   const res = await app.processRequest(app.createRequest({ method: 'GET', url: '/test?id=42' }))
   expect((res.content as Record<string, unknown>).id).toBe(42)
 })
+
+// --- processRequest initialState ---
+
+test('processRequest seeds initialState values into context.state before controller runs', async () => {
+  class TestController extends ODController {
+    async doGet() { return { userId: this.context.state.get('userId') } }
+  }
+  const app = ODApp.create().useController(TestController)
+  await app.init()
+  const req = app.createRequest({ method: 'GET', url: '/test' })
+  const state = new Map<string, unknown>([['userId', 'abc-123']])
+  const res = await app.processRequest(req, state)
+  expect((res.content as Record<string, unknown>).userId).toBe('abc-123')
+})
+
+test('processRequest seeds multiple initialState entries', async () => {
+  class TestController extends ODController {
+    async doGet() {
+      return { a: this.context.state.get('a'), b: this.context.state.get('b') }
+    }
+  }
+  const app = ODApp.create().useController(TestController)
+  await app.init()
+  const req = app.createRequest({ method: 'GET', url: '/test' })
+  const state = new Map<string, unknown>([['a', 1], ['b', 'two']])
+  const res = await app.processRequest(req, state)
+  expect(res.content).toEqual({ a: 1, b: 'two' })
+})
+
+test('processRequest without initialState leaves context.state empty', async () => {
+  class TestController extends ODController {
+    async doGet() { return this.context.state.get('missing') ?? 'absent' }
+  }
+  const app = ODApp.create().useController(TestController)
+  await app.init()
+  const req = app.createRequest({ method: 'GET', url: '/test' })
+  const res = await app.processRequest(req)
+  expect(res.content).toBe('absent')
+})

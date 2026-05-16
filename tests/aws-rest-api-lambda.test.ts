@@ -159,6 +159,13 @@ describe('convertRequest', () => {
     const req = ODAwsRestApiHandlerFactory.convertRequest(app, makeEvent())
     expect(req.protocol).toBe('https')
   })
+
+  test('accepts authorizer in requestContext without throwing', () => {
+    const req = ODAwsRestApiHandlerFactory.convertRequest(app, makeEvent({
+      requestContext: { identity: null, authorizer: { principalId: 'user-42', context: { role: 'admin' } } },
+    }))
+    expect(req.ip).toBe('0.0.0.0')
+  })
 })
 
 describe('convertResponse', () => {
@@ -567,5 +574,42 @@ describe('build', () => {
       'Response serialization failed',
       expect.objectContaining({ error: expect.any(Error), requestId: expect.any(String) }),
     )
+  })
+
+  test('getInitialState seeds state before controller processes the request', async () => {
+    class StateController extends ODController {
+      static routes = [{ method: 'GET', path: '/state', action: 'doGet' }]
+      async doGet() { return { userId: this.context.state.get('userId') } }
+    }
+    const app = await ODApp.create().useController(StateController).init()
+    const getInitialState = (event: ODAwsRestApiEvent) => {
+      const state = new Map<string, unknown>()
+      state.set('userId', event.requestContext?.authorizer?.['principalId'])
+      return state
+    }
+    const handler = await ODAwsRestApiHandlerFactory.build(app, { getInitialState })
+    const result = await handler(makeEvent({
+      path: '/state',
+      requestContext: { identity: null, authorizer: { principalId: 'user-99' } },
+    }))
+    expect(result.statusCode).toBe(200)
+    expect(JSON.parse(result.body)).toEqual({ userId: 'user-99' })
+  })
+
+  test('getInitialState returning undefined does not throw', async () => {
+    const app = await makeApp()
+    const getInitialState = (_event: ODAwsRestApiEvent) => undefined
+    const handler = await ODAwsRestApiHandlerFactory.build(app, { getInitialState })
+    const result = await handler(makeEvent())
+    expect(result.statusCode).toBe(200)
+  })
+
+  test('getInitialState is called with the full event', async () => {
+    const app = await makeApp()
+    const getInitialState = jest.fn().mockReturnValue(undefined)
+    const handler = await ODAwsRestApiHandlerFactory.build(app, { getInitialState })
+    const event = makeEvent({ requestContext: { identity: null, authorizer: { key: 'val' } } })
+    await handler(event)
+    expect(getInitialState).toHaveBeenCalledWith(event)
   })
 })

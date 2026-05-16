@@ -219,6 +219,7 @@ export async function buildAwsLambdaHandler<
   options: ODAwsLambdaHandlerFactoryOptions,
   convertRequest: (app: ODApp, event: TEvent, rawBody?: Buffer) => ODRequest,
   convertResponse: (response: ODResponse) => Promise<TResult>,
+  getInitialState?: (event: TEvent) => Map<string, unknown> | undefined,
 ): Promise<(event: TEvent) => Promise<TResult>> {
   const logger = options.logger ?? app.logger
   const maxBodySize = options.maxBodySize !== undefined ? options.maxBodySize : 1_048_576
@@ -266,7 +267,7 @@ export async function buildAwsLambdaHandler<
 
     let res: ODResponse
     try {
-      res = await app.processRequest(req)
+      res = await app.processRequest(req, getInitialState?.(event))
     } catch (e) {
       logger.error('Request handling failed', { requestId: req.id, error: e })
       let handled: ODResponse | null = null

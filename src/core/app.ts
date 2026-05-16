@@ -485,10 +485,13 @@ export default class ODApp {
    * @param request Incoming request object.
    * @returns A promise that resolves to the operation result.
    */
-  async processRequest(request: ODRequest): Promise<ODResponse> {
+  async processRequest(request: ODRequest, initialState?: Map<string, unknown>): Promise<ODResponse> {
     const route = this._router.route(request.path, request.method)
     const routeObj = route.route_object
     const context = new ODContext(this, request, this.createResponse(), routeObj)
+    if (initialState) {
+      for (const [k, v] of initialState) context.state.set(k, v)
+    }
     try {
       for (const c of this._onRequestStarted) {
         await c(context)

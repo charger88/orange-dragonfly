@@ -22,6 +22,7 @@ export interface ODAwsRestApiEvent {
     identity?: {
       sourceIp?: string | null
     } | null
+    authorizer?: Record<string, unknown> | null
   } | null
 }
 
@@ -38,6 +39,7 @@ export interface ODAwsRestApiHandlerFactoryOptions {
   maxBodySize?: ODAwsLambdaHandlerFactoryOptions['maxBodySize']
   maxResponseSize?: ODAwsLambdaHandlerFactoryOptions['maxResponseSize']
   errorHandler?: ODAwsLambdaHandlerFactoryOptions['errorHandler']
+  getInitialState?: (event: ODAwsRestApiEvent) => Map<string, unknown> | undefined
 }
 
 export type ODAwsRestApiHandler = (event: ODAwsRestApiEvent) => Promise<ODAwsRestApiHandlerResponse>
@@ -60,6 +62,7 @@ export default class ODAwsRestApiHandlerFactory {
       options,
       (requestApp, event, rawBody) => ODAwsRestApiHandlerFactory.convertRequest(requestApp, event, rawBody),
       (response) => ODAwsRestApiHandlerFactory.convertResponse(response, options.maxResponseSize),
+      options.getInitialState,
     )
   }
 

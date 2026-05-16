@@ -3,6 +3,7 @@ import ODController from '../src/core/controller'
 import ODResponse from '../src/core/response'
 import ODAwsHttpApiHandlerFactory, {
   type ODAwsHttpApiEvent,
+  type ODAwsHttpApiHandlerFactoryOptions,
 } from '../src/transport/aws-http-api-lambda'
 
 function makeEvent(overrides: Partial<ODAwsHttpApiEvent> = {}): ODAwsHttpApiEvent {
@@ -90,6 +91,13 @@ describe('convertRequest', () => {
       requestContext: { http: { method: 'GET' } },
     }))
     expect(req.ip).toBe('0.0.0.0')
+  })
+
+  test('accepts authorizer in requestContext without throwing', () => {
+    const req = ODAwsHttpApiHandlerFactory.convertRequest(app, makeEvent({
+      requestContext: { http: { method: 'GET', path: '/test', sourceIp: '1.2.3.4' }, authorizer: { principalId: 'user-42' } },
+    }))
+    expect(req.ip).toBe('1.2.3.4')
   })
 })
 
@@ -238,5 +246,45 @@ describe('build', () => {
       'Request handling failed',
       expect.objectContaining({ error: expect.any(Error), requestId: expect.any(String) }),
     )
+  })
+
+  test('getInitialState seeds state before controller processes the request', async () => {
+    class StateController extends ODController {
+      static routes = [{ method: 'GET', path: '/state', action: 'doGet' }]
+      async doGet() { return { userId: this.context.state.get('userId') } }
+    }
+    const app = await ODApp.create().useController(StateController).init()
+    const getInitialState: ODAwsHttpApiHandlerFactoryOptions['getInitialState'] = (event) => {
+      const state = new Map<string, unknown>()
+      state.set('userId', event.requestContext?.authorizer?.['principalId'])
+      return state
+    }
+    const handler = await ODAwsHttpApiHandlerFactory.build(app, { getInitialState })
+    const result = await handler(makeEvent({
+      rawPath: '/state',
+      requestContext: {
+        http: { method: 'GET', path: '/state', sourceIp: '1.2.3.4' },
+        authorizer: { principalId: 'user-77' },
+      },
+    }))
+    expect(result.statusCode).toBe(200)
+    expect(JSON.parse(result.body)).toEqual({ userId: 'user-77' })
+  })
+
+  test('getInitialState returning undefined does not throw', async () => {
+    const app = await makeApp()
+    const getInitialState = (_event: ODAwsHttpApiEvent) => undefined
+    const handler = await ODAwsHttpApiHandlerFactory.build(app, { getInitialState })
+    const result = await handler(makeEvent())
+    expect(result.statusCode).toBe(200)
+  })
+
+  test('getInitialState is called with the full event', async () => {
+    const app = await makeApp()
+    const getInitialState = jest.fn().mockReturnValue(undefined)
+    const handler = await ODAwsHttpApiHandlerFactory.build(app, { getInitialState })
+    const event = makeEvent({ requestContext: { http: { method: 'GET', path: '/test' }, authorizer: { key: 'val' } } })
+    await handler(event)
+    expect(getInitialState).toHaveBeenCalledWith(event)
   })
 })
