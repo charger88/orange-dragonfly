@@ -101,6 +101,25 @@ Use the REST API adapter when API Gateway sends `httpMethod`, `path`, `multiValu
 
 Use the HTTP API adapter when API Gateway sends `rawPath`, `rawQueryString`, and the v2 `cookies` array.
 
+## AWS Lambda Action Transports
+
+These transports route AWS events directly to an `ODAction` subclass. They sit outside the HTTP layer — no `ODRequest`, no `ODResponse`, no routing. Each factory returns a ready-to-export Lambda handler via a static `build(app, options, ActionClass)` call.
+
+```ts
+import { ODApp, ODAwsSqsLambdaActionFactory } from 'orange-dragonfly'
+import MyAction from './actions/my-action'
+
+const app = await ODApp.create().init()
+
+export const handler = await ODAwsSqsLambdaActionFactory.build(app, {}, MyAction)
+```
+
+See the individual adapter docs for the full event shape, options, and error handling behaviour:
+
+- [ODAwsSqsLambdaActionFactory](built-in/transport/aws-sqs-lambda.md) - SQS Lambda adapter with partial batch failure support
+- [ODAwsSnsLambdaActionFactory](built-in/transport/aws-sns-lambda.md) - SNS Lambda adapter
+- [ODAwsSchedulerLambdaActionFactory](built-in/transport/aws-scheduler-lambda.md) - EventBridge Scheduler Lambda adapter
+
 ## Built-in Transports
 
 - [ODWebServer](built-in/transport/web-server.md) - HTTP/1.1, with optional HTTPS and graceful shutdown
@@ -108,3 +127,6 @@ Use the HTTP API adapter when API Gateway sends `rawPath`, `rawQueryString`, and
 - [ODAwsRestApiHandlerFactory](built-in/transport/aws-rest-api-lambda.md) - API Gateway REST API (v1) Lambda adapter
 - [ODAwsHttpApiHandlerFactory](built-in/transport/aws-http-api-lambda.md) - API Gateway HTTP API (v2) Lambda adapter
 - [ODCommandLineInterface](built-in/transport/command-line-interface.md) - CLI transport for actions
+- [ODAwsSqsLambdaActionFactory](built-in/transport/aws-sqs-lambda.md) - SQS Lambda adapter with partial batch failure support
+- [ODAwsSnsLambdaActionFactory](built-in/transport/aws-sns-lambda.md) - SNS Lambda adapter
+- [ODAwsSchedulerLambdaActionFactory](built-in/transport/aws-scheduler-lambda.md) - EventBridge Scheduler Lambda adapter
